@@ -16,15 +16,13 @@ import Foundation
 import NetworkExtension
 import Security
 
-
 enum FlutterVpnState: Int {
-    case disconnected = 0;
-    case connecting = 1;
-    case connected = 2;
-    case disconnecting = 3;
-    case error = 4;
+    case disconnected = 0
+    case connecting = 1
+    case connected = 2
+    case disconnecting = 3
+    case error = 4
 }
-
 
 class VpnService {
     // MARK: - Singleton
@@ -33,31 +31,26 @@ class VpnService {
         return instance
     }()
 
-
     // MARK: - Few variables
     var vpnManager: NEVPNManager {
-        get {
-            return NEVPNManager.shared()
-        }
+        return NEVPNManager.shared()
     }
     var vpnStatus: NEVPNStatus {
-        get {
-            return vpnManager.connection.status
-        }
+        return vpnManager.connection.status
     }
     let kcs = KeychainService()
     var configurationSaved = false
 
-
     // MARK: - Init
     init() {
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.NEVPNStatusDidChange, object: nil, queue: OperationQueue.main, using: statusChanged)
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name.NEVPNStatusDidChange, object: nil,
+            queue: OperationQueue.main, using: statusChanged)
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-
 
     // MARK: - Methods
     @available(iOS 9.0, *)
@@ -75,7 +68,7 @@ class VpnService {
                 let msg = "VPN Preferences error: \(error!.localizedDescription)"
                 debugPrint(msg)
                 VPNStateHandler.updateState(FlutterVpnState.error.rawValue, errorMessage: msg)
-                return;
+                return
             }
 
             let passwordKey = "vpn_\(type)_password"
@@ -85,7 +78,7 @@ class VpnService {
                 self.kcs.save(key: secretKey, value: secret)
             }
 
-            if (type == "IPSec") {
+            if type == "IPSec" {
                 let p = NEVPNProtocolIPSec()
                 p.serverAddress = server
                 p.username = username
@@ -107,18 +100,40 @@ class VpnService {
                 p.username = username
                 p.remoteIdentifier = server
                 p.serverAddress = server
-
                 p.passwordReference = self.kcs.load(key: passwordKey)
                 p.authenticationMethod = NEVPNIKEAuthenticationMethod.none
-
                 p.useExtendedAuthentication = true
                 p.disconnectOnSleep = false
-                p.ikeSecurityAssociationParameters.encryptionAlgorithm = NEVPNIKEv2EncryptionAlgorithm.algorithmAES256GCM
-p.ikeSecurityAssociationParameters.integrityAlgorithm = NEVPNIKEv2IntegrityAlgorithm.SHA384
-p.ikeSecurityAssociationParameters.diffieHellmanGroup = NEVPNIKEv2DiffieHellmanGroup.group20
-p.childSecurityAssociationParameters.encryptionAlgorithm = NEVPNIKEv2EncryptionAlgorithm.algorithmAES256GCM
-p.childSecurityAssociationParameters.integrityAlgorithm = NEVPNIKEv2IntegrityAlgorithm.SHA384
-p.childSecurityAssociationParameters.diffieHellmanGroup = NEVPNIKEv2DiffieHellmanGroup.group20
+                p.ikeSecurityAssociationParameters.lifetimeMinutes = 120
+
+                // Параметры безопасности IKE
+                // Указываем AES256-GCM с SHA384, что соответствует aes256gcm16-prfsha384
+                p.ikeSecurityAssociationParameters.encryptionAlgorithm =
+                    NEVPNIKEv2EncryptionAlgorithm.algorithmAES256GCM
+                p.ikeSecurityAssociationParameters.integrityAlgorithm =
+                    NEVPNIKEv2IntegrityAlgorithm.SHA384
+                p.ikeSecurityAssociationParameters.diffieHellmanGroup =
+                    NEVPNIKEv2DiffieHellmanGroup.group20  // ECP384
+
+                // Параметры безопасности ESP (Child)
+                // Указываем AES256 с SHA256, что соответствует aes256-sha256
+                p.childSecurityAssociationParameters.lifetimeMinutes = 120
+                p.childSecurityAssociationParameters.encryptionAlgorithm =
+                    NEVPNIKEv2EncryptionAlgorithm.algorithmAES256
+                p.childSecurityAssociationParameters.integrityAlgorithm =
+                    NEVPNIKEv2IntegrityAlgorithm.SHA256
+                p.childSecurityAssociationParameters.diffieHellmanGroup =
+                    NEVPNIKEv2DiffieHellmanGroup.group14  // Используйте group14 для ECP256
+
+                // Дополнительные настройки
+
+                p.disableMOBIKE = false
+                //                p.enableCertificateRevocationCheck = false
+                p.enablePFS = true
+                //                p.onDemandEnabled = true
+
+                // Правила On-Demand
+
                 self.vpnManager.protocolConfiguration = p
             }
 
@@ -131,15 +146,16 @@ p.childSecurityAssociationParameters.diffieHellmanGroup = NEVPNIKEv2DiffieHellma
                     let msg = "VPN Preferences error: \(error!.localizedDescription)"
                     debugPrint(msg)
                     VPNStateHandler.updateState(FlutterVpnState.error.rawValue, errorMessage: msg)
-                    return;
+                    return
                 }
 
                 self.vpnManager.loadFromPreferences(completionHandler: { error in
                     guard error == nil else {
                         let msg = "VPN Preferences error: \(error!.localizedDescription)"
                         debugPrint(msg)
-                        VPNStateHandler.updateState(FlutterVpnState.error.rawValue, errorMessage: msg)
-                        return;
+                        VPNStateHandler.updateState(
+                            FlutterVpnState.error.rawValue, errorMessage: msg)
+                        return
 
                     }
 
@@ -161,13 +177,16 @@ p.childSecurityAssociationParameters.diffieHellmanGroup = NEVPNIKEv2DiffieHellma
                 errorStr = "The VPN configuration associated with the NEVPNManager is disabled."
                 break
             case NEVPNError.configurationInvalid:
-                errorStr = "The VPN configuration associated with the NEVPNManager object is invalid."
+                errorStr =
+                    "The VPN configuration associated with the NEVPNManager object is invalid."
                 break
             case NEVPNError.configurationReadWriteFailed:
-                errorStr = "An error occurred while reading or writing the Network Extension preferences."
+                errorStr =
+                    "An error occurred while reading or writing the Network Extension preferences."
                 break
             case NEVPNError.configurationStale:
-                errorStr = "The VPN configuration associated with the NEVPNManager object was modified by some other process since the last time that it was loaded from the Network Extension preferences by the app."
+                errorStr =
+                    "The VPN configuration associated with the NEVPNManager object was modified by some other process since the last time that it was loaded from the Network Extension preferences by the app."
                 break
             case NEVPNError.configurationUnknown:
                 errorStr = "An unspecified error occurred."
@@ -183,15 +202,17 @@ p.childSecurityAssociationParameters.diffieHellmanGroup = NEVPNIKEv2DiffieHellma
             let msg = "Start error: \(errorStr)"
             debugPrint(msg)
             VPNStateHandler.updateState(FlutterVpnState.error.rawValue, errorMessage: msg)
-            return;
+            return
         }
     }
 
     func reconnect(result: FlutterResult) {
         guard self.configurationSaved == true else {
-            result(FlutterError(code: "-1",
-                                message: "Configuration is not yet saved",
-                                details: nil))
+            result(
+                FlutterError(
+                    code: "-1",
+                    message: "Configuration is not yet saved",
+                    details: nil))
             return
         }
 
@@ -228,7 +249,6 @@ p.childSecurityAssociationParameters.diffieHellmanGroup = NEVPNIKEv2DiffieHellma
             break
         }
     }
-
 
     // MARK: - Event callbacks
     func statusChanged(_: Notification?) {
