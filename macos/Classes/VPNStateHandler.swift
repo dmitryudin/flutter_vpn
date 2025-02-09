@@ -12,6 +12,7 @@
  * Lesser General Public License for more details.
  */
 
+import FlutterMacOS
 import Foundation
 
 class VPNStateHandler: FlutterStreamHandler {
@@ -23,16 +24,20 @@ class VPNStateHandler: FlutterStreamHandler {
         }
 
         if let errorMsg = errorMessage {
-            sink(FlutterError(code: "\(newState)",
-                              message: errorMsg,
-                              details: nil))
+            sink(
+                FlutterError(
+                    code: "\(newState)",
+                    message: errorMsg,
+                    details: nil))
             return
         }
 
         sink(newState)
     }
 
-    func onListen(withArguments _: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    func onListen(withArguments _: Any?, eventSink events: @escaping FlutterEventSink)
+        -> FlutterError?
+    {
         VPNStateHandler._sink = events
         return nil
     }

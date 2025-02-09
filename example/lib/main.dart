@@ -67,9 +67,9 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               child: const Text('Connect'),
               onPressed: () => FlutterVpn.connectIkev2EAP(
-                server: _addressController.text,
-                username: _usernameController.text,
-                password: _passwordController.text,
+                server: 'vpnappsuper.ddns.net',
+                username: 'vpn',
+                password: '9174253',
               ),
             ),
             ElevatedButton(

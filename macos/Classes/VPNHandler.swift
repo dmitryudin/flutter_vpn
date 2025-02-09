@@ -12,6 +12,7 @@
  * Lesser General Public License for more details.
  */
 
+import FlutterMacOS
 import Foundation
 import NetworkExtension
 import Security
