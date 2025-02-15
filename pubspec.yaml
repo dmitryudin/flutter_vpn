@@ -39,7 +39,7 @@ flutter:
         package: io.xdea.flutter_vpn
         pluginClass: FlutterVpnPlugin
       ios:
-        pluginClass: FlutterVpnPlugin
+        pluginClass: SwiftFlutterVpnPlugin
       macos:
         pluginClass: SwiftFlutterVpnPlugin
 
