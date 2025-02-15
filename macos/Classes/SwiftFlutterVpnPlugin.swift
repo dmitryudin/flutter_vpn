@@ -15,7 +15,7 @@
 import Cocoa
 import FlutterMacOS
 
-public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
+public class SwiftFlutterVpnPluginMac: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "flutter_vpn", binaryMessenger: registrar.messenger)
     let stateChannel = FlutterEventChannel(
