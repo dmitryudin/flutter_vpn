@@ -16,6 +16,7 @@ buildscript {
     }
 }
 
+
 apply plugin: 'de.undercouch.download'
 
 // Download prebuilt native libs.
@@ -48,6 +49,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace = 'io.xdea.flutter_vpn'
     compileSdkVersion 34
 
     compileOptions {
